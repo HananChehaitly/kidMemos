@@ -1,70 +1,97 @@
 const models =  require('../models') ;
 const Validator =  require('fastest-validator');
 const res = require('express/lib/response');
+const { response } = require('../app');
 
-function save(req, res){
-    const post = {
-        title: req.body.title,
-        content: req.body.content,
-        imageUrl: req.body.image_url,
-        categoryId: req.body.categoryId,
-        userId: 1
-    }
 
-    const schema = {
-        title: {type:'string', optional: false , max: "100"},
-        content: {type:'string', optional: false , max: "500"},
-        categoryId: {type:'number', optional: false},   
-    }
-    const v =  new Validator();
-    const validationResponse = v.validate(post, schema);  //if validation is correct it will return true, else it will return an array of the errors.
-
-    if(validationResponse !== true){
-        return res.status(400).json({
-            message: 'Validation failed',
-            errors: validationResponse
-        });
-    }
-    models.Post.create(post).then(result => {
+function getAllposts(req, res){
+    const id = req.user.dataValues.id;
+    models.Memory.findAll({where:{parent_id:id}}).then(result =>{
         res.status(201).json({
-            message: 'Post created successfully',
             post: result
         });
-    }).catch(error => {
-        res.status(500).json({
-            message: 'Something went wrong',
-            post: error
-        });
-    });
-}
-function show(req, res){
-    const id = req.params.id;
-    models.Post.findByPk(id).then(result => {
-        if(result){
-            res.status(200).json(result);
-        }
-        else{
-            res.status(200).json({
-                message: 'Post not found!'
-            }); 
-        }
-    }).catch(error =>{
-        res.status(500).json({
-            message: 'Something went wrong',
-        })
-    })
-}
-
-function index(req, res){
-    models.Post.findAll().then(result => {
-        console.log(req.user.emails[0].value);
-        res.status(200).json(result);
     }).catch(error=>{
         result.status(500).json({
             message: 'Something went wrong',
             error: error
         })
     })
+}
+
+function getKidMemories(req, res){
+    const kid_name = req.params.name;
+    const id = req.user.dataValues.id;
+    models.Kid.findAll({where:{parent_id:id, name:kid_name}}).then(response =>{
+        models.Memory.findAll({where:{parent_id:id, kid_id:response[0].dataValues.id}}).then(result =>{
+            res.status(201).json({
+                post: result
+            });
+        })
+    })    
+}
+
+function getKidYearMemories(req, res){
+    console.log('batataa'); 
+    const kid_name = req.params.name;
+    const kid_age = req.params.age;
+    const id = req.user.dataValues.id;
+    models.Kid.findAll({where:{parent_id:id, name:kid_name}}).then(response =>{
+        models.Memory.findAll({where:{parent_id:id, kid_id:response[0].dataValues.id, age:kid_age}}).then(result =>{
+            res.status(201).json({
+                post: result
+            });
+        })
+    })    
+}
+
+function getKidAges(req, res){
+    const kid_name = req.params.name;
+    const id = req.user.dataValues.id;
+    models.Kid.findAll({where:{parent_id:id, name:kid_name}}).then(response =>{
+        models.Memory.findAll({attributes:['age'], where:{parent_id:id, kid_id:response[0].dataValues.id}}).then(result =>{
+            res.status(201).json({
+                post: result
+            });
+        })
+    })    
+}
+
+function AddMemory(req, res){
+    const id = req.user.dataValues.id;
+    const name = req.body.name;
+    models.Kid.findOrCreate({ where: {name: name }, 
+        defaults: {
+                    parent_id: id,
+                    name: name
+                }
+    }).then(result =>{
+    models.Kid.findAll({where:{parent_id: id,
+        name: name}}).then(response => {
+            const post = {
+                parent_id: id,
+                title: req.body.title,
+                content: req.body.content,
+                picture_url: req.body.image_url,
+                age: req.body.age,
+                kid_id : response[0].dataValues.id
+            }
+            models.Memory.create(post).then(result => {
+                res.status(201).json({
+                    message: 'Post created successfully',
+                    post: result
+                });
+            })
+        })
+    })
+}
+
+function getKidsNames(req, res){
+    const id = req.user.dataValues.id;
+    models.Kid.findAll({attributes:['name'],where:{parent_id:id}}).then(result =>{
+            res.status(201).json({
+                post: result
+            })
+    })    
 }
 
 function update(req, res){
@@ -105,26 +132,16 @@ function update(req, res){
     })
 }
 
-function destroy(req, res){
-    const id = req.params.id;
-    const userId = 1;
-    
-    models.Post.destroy({where:{id:id , userId:userId}}).then(result =>{
-        res.status(200).json({
-            message: "Post deleted successfully",   
-        });
-    }).catch(error =>{
-        res.status(500).json({
-        message: 'Something went wrong',
-        error: error  
-        })
-    })
-}
+
 
 module.exports = {
-    save: save,
-    show: show,
-    index:index,
+        
+    getAllposts:getAllposts,
+    getKidMemories: getKidMemories,
+    getKidYearMemories:getKidYearMemories,
+    getKidAges: getKidAges,
+    AddMemory: AddMemory,
+    kidsNames: getKidsNames,
     update: update,
-    destroy: destroy
+
 }

@@ -5,40 +5,45 @@ const passport = require('passport');
 const cookieSession = require('cookie-session');
 require('./passport-setup');
 
-const postsRoute = require('./routes/posts');
+const homeRoute = require('./routes/memories');
 
 app.use(bodyParser.json());
-
+app.use('/uploads', express.static('uploads')); 
 app.use(cookieSession({
     name: 'kidMemos-session',
     keys: ['key1', 'key2']
   }))
 
 const isLoggedIn = (req, res, next) => {
-    if(req.user){
-        next();
-    } else{
-        res.sendStatus(401);
-    }
+  if(req.isAuthenticated()){
+      next();
+  } else{
+      res.sendStatus(401); 
+  }
 }
 
+const isGuest = (req, res, next) => {
+  if(!req.isAuthenticated()){
+      next();
+  } else{
+      res.redirect('/home'); 
+  }
+}
 
 app.use(passport.initialize());
-app.use(passport.session()); //it tells it to use sessions to manage authentication.
+app.use(passport.session()); 
 
-app.use('/posts', isLoggedIn, postsRoute); //this function lets run a function as a middleware.
+app.use('/home', isLoggedIn, homeRoute); 
+
 app.get('/failed', (req, res) => res.send('You failed to authenticate'));
-app.get('/good', isLoggedIn ,(req, res) => res.send(`Welcome to home page`));
-app.get('/try', isLoggedIn ,(req, res) => res.send(`trial`));
 
-app.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+app.get('/login', isGuest, passport.authenticate('google', { scope: ['profile', 'email'] }));
 
 app.get('/google/callback', passport.authenticate('google', { failureRedirect: '/failed' }),
   function(req, res) {
-    // Successful authentication, redirect home.
-    res.redirect('/good');
+    res.redirect('/home');
   });
-app.get('/logout', (req, res) =>{
+app.get('/logout', isLoggedIn, (req, res) =>{
     req.session = null;
     req.logout();
     res.redirect('/');

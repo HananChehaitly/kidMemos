@@ -1,15 +1,16 @@
 const passport =  require('passport');
+const models =  require('./models') ;
 
 var GoogleStrategy = require('passport-google-oauth20').Strategy;
 
 passport.serializeUser(function(user, done) {
-    done(null, user);
+    done(null, user.dataValues.id);
   });
   
-passport.deserializeUser(function(user, done) {
-    //User.findById(id, function(err, user) {
+passport.deserializeUser(function (id, done) {
+    models.User.findByPk(id).then(user =>{
       done(null, user);
-    //});
+    })
   });
 
 passport.use(new GoogleStrategy({
@@ -18,10 +19,15 @@ passport.use(new GoogleStrategy({
     callbackURL: "http://localhost:3000/google/callback"
   },
   function(accessToken, refreshToken, profile, done) {
-    //use profile info (mainly profile.id, profile.email) to check if user is registered in db
-    //if not in db register him
-    //User.findOrCreate({ googleId: profile.id }, function (err, user) {
-      return done(null, profile);
-    //});
-  }
+    models.User.findOrCreate({ where: {google_id: profile.id }, 
+        defaults: {
+                    google_id: profile.id,
+                    email:profile.emails[0].value,
+                    name: profile.displayName
+                }
+    }).then(user => {
+      return done(null, user[0]);
+    });
+    
+}
 ));

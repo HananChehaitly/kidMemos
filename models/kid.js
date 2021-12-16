@@ -15,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
   };
   Kid.init({
     name: DataTypes.STRING,
-    parent_id: DataTypes.STRING
+    parent_id: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'Kid',

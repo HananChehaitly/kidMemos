@@ -4,9 +4,12 @@ const res = require('express/lib/response');
 const { response } = require('../app');
 
 
-function getAllposts(req, res){
+function getAllmemories(req, res){
     const id = req.user.dataValues.id;
-    models.Memory.findAll({where:{parent_id:id}}).then(result =>{
+    models.Memory.findAll(
+        {   where:{parent_id:id}, 
+            order: [ ['kid_id', 'ASC'], ['age', 'ASC'] ]
+        }).then(result =>{
         res.status(201).json({
             post: result
         });
@@ -71,14 +74,14 @@ function AddMemory(req, res){
                 parent_id: id,
                 title: req.body.title,
                 content: req.body.content,
-                picture_url: req.body.image_url,
+                picture_url: req.file.filename,
                 age: req.body.age,
                 kid_id : response[0].dataValues.id
             }
             models.Memory.create(post).then(result => {
                 res.status(201).json({
                     message: 'Post created successfully',
-                    post: result
+                    post: result 
                 });
             })
         })
@@ -87,7 +90,7 @@ function AddMemory(req, res){
 
 function getKidsNames(req, res){
     const id = req.user.dataValues.id;
-    models.Kid.findAll({attributes:['name'],where:{parent_id:id}}).then(result =>{
+    models.Kid.findAll({attributes:['name'],where:{parent_id:id},}).then(result =>{
             res.status(201).json({
                 post: result
             })
@@ -133,10 +136,9 @@ function update(req, res){
 }
 
 
-
 module.exports = {
         
-    getAllposts:getAllposts,
+    getAllmemories:getAllmemories,
     getKidMemories: getKidMemories,
     getKidYearMemories:getKidYearMemories,
     getKidAges: getKidAges,

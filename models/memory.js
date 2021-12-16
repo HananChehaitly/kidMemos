@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   };
   Memory.init({
-    parent_id: DataTypes.STRING,
+    parent_id: DataTypes.INTEGER,
     kid_id: DataTypes.INTEGER,
     picture_url: DataTypes.STRING,
     content: DataTypes.STRING,

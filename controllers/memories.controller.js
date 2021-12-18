@@ -2,7 +2,7 @@ const models =  require('../models') ;
 const Validator =  require('fastest-validator');
 const res = require('express/lib/response');
 const { response } = require('../app');
-
+const {Sequelize} = require('sequelize');
 
 function getAllmemories(req, res){
     const id = req.user.dataValues.id;
@@ -28,13 +28,12 @@ function getKidMemories(req, res){
         models.Memory.findAll({where:{parent_id:id, kid_id:response[0].dataValues.id}}).then(result =>{
             res.status(201).json({
                 post: result
-            });
+            }); 
         })
     })    
 }
 
 function getKidYearMemories(req, res){
-    console.log('batataa'); 
     const kid_name = req.params.name;
     const kid_age = req.params.age;
     const id = req.user.dataValues.id;
@@ -90,11 +89,20 @@ function AddMemory(req, res){
 
 function getKidsNames(req, res){
     const id = req.user.dataValues.id;
-    models.Kid.findAll({attributes:['name'],where:{parent_id:id},}).then(result =>{
+    models.Kid.findAll({attributes:['id','name'],where:{parent_id:id},}).then(result =>{
             res.status(201).json({
                 post: result
             })
     })    
+}
+
+function getKidsAges(req, res){
+    const id = req.user.dataValues.id;
+    models.Memory.findAll({ attributes:['age','id'], group: ['age'] , where:{parent_id:id},  order: [['age', 'ASC']] }).then(result =>{
+            res.status(201).json({
+                post: result
+            });
+        })    
 }
 
 function update(req, res){
@@ -106,7 +114,7 @@ function update(req, res){
         categoryId: req.body.categoryId,
     }
     const userId = 1;
-    
+     
     const schema = {
         title: {type:'string', optional: false , max: "100"},
         content: {type:'string', optional: false , max: "500"},
@@ -142,6 +150,7 @@ module.exports = {
     getKidMemories: getKidMemories,
     getKidYearMemories:getKidYearMemories,
     getKidAges: getKidAges,
+    getKidsAges: getKidsAges,
     AddMemory: AddMemory,
     kidsNames: getKidsNames,
     update: update,

@@ -4,28 +4,37 @@ const app = express();
 const passport = require('passport');
 const cookieSession = require('cookie-session');
 const url = require('./services/url');
-
 require('./passport-setup');
+
 const cors = require('cors');
-app.use(cors());
+
 
 const homeRoute = require('./routes/memories');
 const authRoute =  require('./routes/isLoggedin');
 
+
+app.use(cors({
+  origin: url,
+  methods: ['POST', 'PUT', 'GET', 'OPTIONS', 'HEAD'],
+  credentials: true
+}));
+
 app.use(bodyParser.json());
-app.use(cors({ origin: url , credentials :  true}));
+
+
 app.use('/uploads', express.static('uploads')); 
+
 app.use(cookieSession({
     name: 'kidMemos-session',
-    keys: ['key1', 'key2']
+    keys: ['key1']
   }))
 
 
-const isGuest = (req, res, next) => {
+const isGuest = (req, res, next) => { 
   if(!req.isAuthenticated()){
       next();
   } else{
-      res.redirect('/home'); 
+      res.redirect('/home');  
   }
 }
 

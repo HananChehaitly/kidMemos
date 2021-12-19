@@ -3,6 +3,60 @@ const Validator =  require('fastest-validator');
 const res = require('express/lib/response');
 const { response } = require('../app');
 const {Sequelize} = require('sequelize');
+const imageUploader =  require('../helpers/image-uploader');
+
+function addMemory(req, res){
+    console.log(req.body);
+    console.log(req.isAuthenticated());
+    const id = req.user.dataValues.id; 
+    const name = req.body.name;
+    models.Kid.findOrCreate({ where: {name: name }, 
+        defaults: {
+                    parent_id: id,
+                    name: name
+                }
+    }).then(result =>{
+        models.Kid.findAll({where:{parent_id: id,
+            name: name}}).then(response => { 
+                const post = {
+                parent_id: id, 
+                title: req.body.title,  
+                content: req.body.content,  
+                age: req.body.age, 
+                kid_id : response[0].dataValues.id
+                }
+                models.Memory.create(post).then(result => {
+                    res.status(201).json({
+                    message: 'Post created successfully',
+                    post: result 
+                });
+            })
+        })
+    })
+} 
+
+function addMemoryPic(req, res){
+    console.log(req.user);
+    const f = imageUploader.upload.single('image');
+    const id = req.user.dataValues.id; 
+    const name = req.body.name;
+    models.Kid.findAl({where:{parent_id: id, name: name}}).then(response => {
+            const post = {
+                parent_id: id,
+                title: req.body.title,
+                content: req.body.content,
+                picture_url: f.file.filename,
+                age: req.body.age,                    
+                kid_id : response[0].dataValues.id
+            }
+            models.Memory.create(post).then(result => {
+                res.status(201).json({
+                    message: 'Post created successfully',
+                    post: result 
+                });
+            })
+    })
+}
 
 function getAllmemories(req, res){
     const id = req.user.dataValues.id;
@@ -56,35 +110,6 @@ function getKidAges(req, res){
             });
         })
     })    
-}
-
-function AddMemory(req, res){
-    const id = req.user.dataValues.id;
-    const name = req.body.name;
-    models.Kid.findOrCreate({ where: {name: name }, 
-        defaults: {
-                    parent_id: id,
-                    name: name
-                }
-    }).then(result =>{
-    models.Kid.findAll({where:{parent_id: id,
-        name: name}}).then(response => {
-            const post = {
-                parent_id: id,
-                title: req.body.title,
-                content: req.body.content,
-                picture_url: req.file.filename,
-                age: req.body.age,
-                kid_id : response[0].dataValues.id
-            }
-            models.Memory.create(post).then(result => {
-                res.status(201).json({
-                    message: 'Post created successfully',
-                    post: result 
-                });
-            })
-        })
-    })
 }
 
 function getKidsNames(req, res){
@@ -151,8 +176,9 @@ module.exports = {
     getKidYearMemories:getKidYearMemories,
     getKidAges: getKidAges,
     getKidsAges: getKidsAges,
-    AddMemory: AddMemory,
     kidsNames: getKidsNames,
+    addMemory: addMemory,
+    addMemoryPic: addMemoryPic,
     update: update,
 
 }

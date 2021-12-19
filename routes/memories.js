@@ -5,7 +5,7 @@ const router = express.Router();
 const imageUploader =  require('../helpers/image-uploader');
 const  checkAuth= require("../middleware/authController");
 
-//router.use(checkAuth.isLoggedIn);
+router.use(checkAuth.isLoggedIn);
 
 router.get('/', memoriesController.getAllmemories);
 router.post('/make-memory', memoriesController.addMemory);

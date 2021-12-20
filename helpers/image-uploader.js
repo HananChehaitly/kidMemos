@@ -13,12 +13,14 @@ const storage = multer.diskStorage({
 });
 
 // This function doesn't allow users to uplad files other than png or jpeg.
-
+ 
 const filefilter = (req, file , cb) => {
     if(file.mimetype === 'image/jpeg'  ||  file.mimetype === 'image/png'){
+        console.log('entered here');
         cb(null, '/api/make-memory');
     }else{
-        cb(new Error('unsupported files'), false);
+        console.log('nope here');
+        cb(new Error('unsupported files'), flase);
     }
 }
 

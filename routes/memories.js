@@ -8,13 +8,12 @@ const  checkAuth= require("../middleware/authController");
 router.use(checkAuth.isLoggedIn);
 
 router.get('/', memoriesController.getAllmemories);
-router.post('/make-memory', memoriesController.addMemory);
-router.post('/picture', memoriesController.addMemoryPic)
+router.post('/make-memory', imageUploader.upload.single('image'),memoriesController.addMemory);
 router.get('/kidsNames', memoriesController.kidsNames);
 router.get('/getAges', memoriesController.getKidsAges);
 router.get('/ages/:name', memoriesController.getKidAges);
 router.get('/:name/:age', memoriesController.getKidYearMemories);
-router.get('/:name', memoriesController.getKidMemories);
+router.get('/:name', memoriesController.getKidMemories); 
 
 module.exports = router;
       

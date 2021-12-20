@@ -6,7 +6,6 @@ const {Sequelize} = require('sequelize');
 const imageUploader =  require('../helpers/image-uploader');
 
 function addMemory(req, res){
-    console.log(req.body);
     console.log(req.isAuthenticated());
     const id = req.user.dataValues.id; 
     const name = req.body.name;
@@ -16,14 +15,15 @@ function addMemory(req, res){
                     name: name
                 }
     }).then(result =>{
-        models.Kid.findAll({where:{parent_id: id,
+        models.Kid.findOne({where:{parent_id: id,
             name: name}}).then(response => { 
                 const post = {
-                parent_id: id, 
+                parent_id: id,  
                 title: req.body.title,  
                 content: req.body.content,  
-                age: req.body.age, 
-                kid_id : response[0].dataValues.id
+                age: req.body.age,  
+                picture_url: req.file.filename,
+                kid_id : response.dataValues.id
                 }
                 models.Memory.create(post).then(result => {
                     res.status(201).json({
@@ -34,29 +34,6 @@ function addMemory(req, res){
         })
     })
 } 
-
-function addMemoryPic(req, res){
-    console.log(req.user);
-    const f = imageUploader.upload.single('image');
-    const id = req.user.dataValues.id; 
-    const name = req.body.name;
-    models.Kid.findAl({where:{parent_id: id, name: name}}).then(response => {
-            const post = {
-                parent_id: id,
-                title: req.body.title,
-                content: req.body.content,
-                picture_url: f.file.filename,
-                age: req.body.age,                    
-                kid_id : response[0].dataValues.id
-            }
-            models.Memory.create(post).then(result => {
-                res.status(201).json({
-                    message: 'Post created successfully',
-                    post: result 
-                });
-            })
-    })
-}
 
 function getAllmemories(req, res){
     const id = req.user.dataValues.id;
@@ -130,45 +107,6 @@ function getKidsAges(req, res){
         })    
 }
 
-function update(req, res){
-    const id = req.params.id;
-    const updatedPost = {
-        title: req.body.title,
-        content: req.body.content,
-        imageUrl: req.body.image_url,
-        categoryId: req.body.categoryId,
-    }
-    const userId = 1;
-     
-    const schema = {
-        title: {type:'string', optional: false , max: "100"},
-        content: {type:'string', optional: false , max: "500"},
-        categoryId: {type:'number', optional: false},   
-    }
-    const v =  new Validator();
-    const validationResponse = v.validate(updatedPost, schema);  //if validation is correct it will return true, else it will return an array of the errors.
-
-    if(validationResponse !== true){
-        return res.status(400).json({
-            message: 'Validation failed',
-            errors: validationResponse
-        });
-    }
-
-    models.Post.update(updatedPost, {where: {id:id, userId: userId}}).then(result => {
-        res.status(200).json({
-            message: "Post updated successfully",
-            post: updatedPost   //if you put result it will give 1 because result is a boolean here.
-        });
-    }).catch(error =>{
-        res.status(500).json({
-        message: 'Something went wrong',
-        error: error  
-        })
-    })
-}
-
-
 module.exports = {
         
     getAllmemories:getAllmemories,
@@ -178,7 +116,5 @@ module.exports = {
     getKidsAges: getKidsAges,
     kidsNames: getKidsNames,
     addMemory: addMemory,
-    addMemoryPic: addMemoryPic,
-    update: update,
 
 }

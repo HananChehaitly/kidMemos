@@ -9,6 +9,7 @@ router.use(checkAuth.isLoggedIn);
 
 router.get('/', memoriesController.getAllmemories);
 router.post('/make-memory', imageUploader.upload.single('image'),memoriesController.addMemory);
+router.get('/search/:word', memoriesController.search);
 router.get('/kidsNames', memoriesController.kidsNames);
 router.get('/getAges', memoriesController.getKidsAges);
 router.get('/ages/:name', memoriesController.getKidAges);

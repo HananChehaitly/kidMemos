@@ -3,6 +3,7 @@ const Validator =  require('fastest-validator');
 const res = require('express/lib/response');
 const { response } = require('../app');
 const {Sequelize} = require('sequelize');
+const Op = Sequelize.Op;
 const imageUploader =  require('../helpers/image-uploader');
 
 function addMemory(req, res){
@@ -81,7 +82,7 @@ function getKidAges(req, res){
     const kid_name = req.params.name;
     const id = req.user.dataValues.id;
     models.Kid.findAll({where:{parent_id:id, name:kid_name}}).then(response =>{
-        models.Memory.findAll({attributes:['age'], where:{parent_id:id, kid_id:response[0].dataValues.id}}).then(result =>{
+        models.Memory.findAll({attributes:['age'], where:{parent_id:id, kid_id:response[0].dataValues.id}, order: [['age', 'ASC']]}).then(result =>{
             res.status(201).json({
                 post: result
             });
@@ -107,6 +108,18 @@ function getKidsAges(req, res){
         })    
 }
 
+function search(req, res){
+    const id = req.user.dataValues.id;
+    models.Memory.findAll( { where: {
+          content: { [Op.like]: "%" + req.params.word + "%" },
+          parent_id: id,
+        },
+    }).then(result =>{
+            res.status(201).json({
+            post: result
+        });
+    }) 
+}
 module.exports = {
         
     getAllmemories:getAllmemories,
@@ -116,5 +129,5 @@ module.exports = {
     getKidsAges: getKidsAges,
     kidsNames: getKidsNames,
     addMemory: addMemory,
-
+    search: search
 }
